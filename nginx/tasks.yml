@@ -1,0 +1,19 @@
+---
+    - name: Add Nginx Repository
+      apt_repository: repo='ppa:nginx/stable' state=present
+      register: nginx_ppa_installed
+      tags: nginx
+
+    - name: Install Nginx
+      apt: pkg=nginx state=latest update_cache=true
+      when: nginx_ppa_installed|success
+      register: nginx_installed
+      notify:
+        - Start Nginx
+      tags: nginx
+
+    - name: Create webserver root
+      file: path=/var/www state=directory group=www-data mode=0775
+      when: nginx_installed|success
+      register: webserver_root_created
+      tags: nginx

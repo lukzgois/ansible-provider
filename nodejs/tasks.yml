@@ -1,0 +1,17 @@
+---
+  - name: Add NodeJS repository
+    apt_repository: repo="ppa:chris-lea/node.js" state=present
+    register: nodejs_ppa_installed
+    tags: nodejs
+
+  - name: Install node.js
+    apt: name=nodejs state=present
+    when: nodejs_ppa_installed|success
+    tags: nodejs
+
+  - name: Install gulp and bower
+    npm: name={{ item }} state=present global=yes
+    with_items:
+      - gulp
+      - bower
+    tags: nodejs

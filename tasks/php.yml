@@ -1,0 +1,63 @@
+---
+    - name: Add PHP repository
+      apt_repository: repo="ppa:ondrej/php5-5.6" state=present
+      register: phpppainstalled
+      tags: php
+
+    - name: Install PHP
+      apt: pkg=php5-fpm state=latest update_cache=true
+      when: phpppainstalled|success
+      register: phpinstalled
+      tags: php
+
+    - name: set some php-fpm settings
+      lineinfile: dest=/etc/php5/fpm/php.ini regexp="{{ item.regex }}" line="{{ item.line }}"
+      with_items:
+        - {regex: "error_reporting = .*", line: "error_reporting = E_ALL"}
+        - {regex: "display_errors = .*", line: "display_errors = Off"}
+        - {regex: "cgi.fix_pathinfo=.*", line: "cgi.fix_pathinfo=0"}
+        - {regex: "memory_limit = .*", line: "memory_limit = 512M"}
+        - {regex: ";error_log = syslog", line: "error_log=/var/log/php/errors.log"}
+        - {regex: "upload_max_filesize = .*", line: "upload_max_filesize = 100M"}
+        - {regex: "date.timezone =.*", line: "date.timezone = America/Sao_Paulo"}
+      when: phpinstalled|success
+      notify:
+        - Start PHP
+      tags: php
+
+    - name: install composer
+      shell: curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer creates=/usr/local/bin/composer
+      register: composer_is_installed
+      tags: composer
+
+    # Install PHP Stuffs
+    - name: install php stuffs
+      apt: name={{ item }} state=present
+      with_items:
+        - "php5-cli"
+        - "php5-mysqlnd"
+        - "php5-apcu"
+        - "php5-json"
+        - "php5-curl"
+        - "php5-gd"
+        - "php5-gmp"
+        - "php5-imap"
+        - "php5-mcrypt"
+        - "php5-memcached"
+      tags: php
+
+    # Make MCrypt Available
+    - name: make mcrypt available
+      file: src=/etc/php5/mods-available/mcrypt.ini dest=/etc/php5/cli/conf.d/20-mcrypt.ini state=link force=yes
+      tags: php
+
+    # Set Some PHP CLI Settings
+    - name: set some php cli settings
+      lineinfile: dest=/etc/php5/cli/php.ini regexp="{{ item.regex }}" line="{{ item.line }}"
+      with_items:
+          - {regex: "error_reporting = .*", line: "error_reporting = E_ALL"}
+          - {regex: "display_errors = .*", line: "display_errors = On"}
+          - {regex: "memory_limit = .*", line: "memory_limit = 512M"}
+          - {regex: "date.timezone =.*", line: "date.timezone = America/Sao_Paulo"}
+          - {regex: ";error_log = syslog", line: "error_log=/var/log/php/errors_cli.log"}
+      tags: php

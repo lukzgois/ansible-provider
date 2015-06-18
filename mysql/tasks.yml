@@ -1,0 +1,31 @@
+---
+- name: Install MySQL Server
+  apt: pkg={{ item }}
+  sudo: yes
+  with_items:
+    - mysql-server
+    - python-mysqldb
+  tags: mysql
+
+- name: delete anonymous MySQL server user for localhost
+  action: mysql_user login_user=root login_password={{ mysql_current_root_password }} user="" state="absent"
+  tags: mysql
+
+- name: remove the MySQL test database
+  action: mysql_db login_user=root login_password={{ mysql_current_root_password }} db=test state=absent
+  tags: mysql
+
+- name: Change root user password
+  mysql_user:
+    login_user=root
+    login_password={{ mysql_current_root_password }}
+    name=root
+    password={{ mysql_root_password }}
+    priv=*.*:ALL,GRANT
+    host={{ item }}
+  with_items:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  ignore_errors: true
+  tags: mysql

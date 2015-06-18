@@ -1,0 +1,21 @@
+server {
+    root /var/www/beanstalk_console/public;
+    index index.php index.html index.htm;
+
+    server_name {{ beanstalkd_server_name }};
+
+    error_log /var/log/nginx/beanstalk.error.log error;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}

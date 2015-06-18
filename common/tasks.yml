@@ -1,0 +1,38 @@
+---
+    # Install Some Basic Packages
+    - name: install some basic packages
+      apt: name={{ item }} state=present
+      with_items:
+        - "software-properties-common"
+        - "curl"
+        - "build-essential"
+        - "dos2unix"
+        - "gcc"
+        - "git"
+        - "libmcrypt4"
+        - "libpcre3-dev"
+        - "make"
+        - "python2.7-dev"
+        - "python-pip"
+        - "re2c"
+        - "supervisor"
+        - "unattended-upgrades"
+        - "whois"
+        - "vim"
+      tags: common
+
+    - name: create the deployer user
+      user: name=deployer groups=www-data comment="User for deploy projects" shell=/bin/bash
+      tags: common
+
+    # Force Locale
+    - name: force locale
+      lineinfile: line='LC_ALL=pt_BR.UTF-8' dest=/etc/default/locale
+    - name: locale gen
+      locale_gen: name=pt_BR.UTF-8 state=present
+      tags: common
+
+      # Set My Timezone
+    - name: set my timezone
+      file: src=/usr/share/zoneinfo/Brazil/East dest=/etc/localtime state=link force=yes
+      tags: common

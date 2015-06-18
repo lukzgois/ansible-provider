@@ -1,0 +1,5 @@
+---
+    beanstalkd_server_name: beanstalk.app
+    beanstalkd_requires_auth: true
+    beanstalkd_login: root
+    beanstalkd_password: root

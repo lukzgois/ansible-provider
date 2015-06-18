@@ -1,0 +1,39 @@
+---
+    - name: Install beanstalkd
+      apt: name=beanstalkd state=present update_cache=true
+      tags: beanstalkd
+
+    - lineinfile: dest=/etc/default/beanstalkd regexp="START=yes" line="START=yes"
+      tags: beanstalkd
+
+    - name: ensure beanstalkd is running
+      service: name=beanstalkd state=started enabled=yes
+      tags: beanstalkd
+
+    - name: install beanstalk console
+      shell: composer create-project ptrofimov/beanstalk_console -s dev /var/www/beanstalk_console --keep-vcs
+      register: beanstalk_console_installed
+      tags: beanstalkd
+
+    - name: change group and permission of beastalk_console
+      when: beanstalk_console_installed|success
+      shell: chgrp -R www-data /var/www/beanstalk_console && chmod -R 775 /var/www/beanstalk_console
+      tags: beanstalkd
+
+    - name: create beanstalk_console host file
+      when: beanstalk_console_installed|success
+      template: src=beanstalkd/templates/beanstalk_host dest=/etc/nginx/sites-available/beanstalk
+      register: beanstalkd_console_host_created
+      tags: beanstalkd
+
+    - name: enable beanstalk_console
+      when: beanstalkd_console_host_created|success
+      file: path=/etc/nginx/sites-enabled/beanstalk src=/etc/nginx/sites-available/beanstalk state=link
+      tags: beanstalkd
+      notify:
+          - Reload Nginx
+
+    - name: config beanstalk_console
+      when: beanstalk_console_installed|success
+      template: src=beanstalkd/templates/config dest=/var/www/beanstalk_console/config.php mode=0755 group=www-data
+      tags: beanstalkd

@@ -1,0 +1,17 @@
+---
+  - hosts: servers
+    user: root
+    gather_facts: no
+    vars_files:
+        - beanstalkd/vars.yml
+        - mysql/vars.yml
+    tasks:
+        - include: common/tasks.yml
+        - include: php/tasks.yml
+        - include: nginx/tasks.yml
+        - include: nodejs/tasks.yml
+        - include: beanstalkd/tasks.yml
+        - include: mysql/tasks.yml
+    handlers:
+        - include: php/handlers.yml
+        - include: nginx/handlers.yml
